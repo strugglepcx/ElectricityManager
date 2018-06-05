@@ -19,7 +19,7 @@ namespace Freedom.ElectricityManager.SocketCenter
         protected override StringRequestInfo ProcessMatchedRequest(byte[] buffer, int offset, int length, bool toBeCopied)
         {
             //TODO: 通过解析到的数据来构造请求实例，并返回
-            var bodyString = Encoding.UTF8.GetString(buffer);
+            var bodyString = Encoding.UTF8.GetString(buffer.Skip(offset).Take(length).ToArray());
             var areaCode = bodyString.Substring(0, 2);
             var detailAreaCode = bodyString.Substring(2, 2);
             var equipmentCode = bodyString.Substring(4, 8);

@@ -48,7 +48,7 @@ namespace Freedom.ElectricityManager.SocketCenter
                         session.Send(result.ToString());
                         break;
                     case "RECEVIE":
-                        session.Send($"areaCode：{requestInfo.Parameters[0]} detailAreaCode:{requestInfo.Parameters[1]} equipmentCode:{requestInfo.Parameters[2]} commandContent:{requestInfo.Parameters[3]}");
+                        session.Send($"areaCode:{requestInfo.Parameters[0]} detailAreaCode:{requestInfo.Parameters[1]} equipmentCode:{requestInfo.Parameters[2]} commandContent:{requestInfo.Parameters[3]}");
                         break;
                 }
             };
