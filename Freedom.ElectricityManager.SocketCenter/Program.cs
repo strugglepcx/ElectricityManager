@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Freedom.ElectricityManager.SocketCenter.Models;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketBase.Protocol;
 
@@ -48,13 +51,44 @@ namespace Freedom.ElectricityManager.SocketCenter
                         session.Send(result.ToString());
                         break;
                     case "RECEVIE":
-                        session.Send($"areaCode：{requestInfo.Parameters[0]} detailAreaCode:{requestInfo.Parameters[1]} equipmentCode:{requestInfo.Parameters[2]} commandContent:{requestInfo.Parameters[3]}");
+                        try
+                        {
+
+                            using (var httpClient = new HttpClient())
+                            {
+                                var addPacketTaskInput = new AddPacketTaskInput
+                                {
+                                    PacketData = requestInfo.Body,
+                                    AreaOne = requestInfo.Parameters[0],
+                                    AreaTwo = requestInfo.Parameters[1],
+                                    DataContent = requestInfo.Parameters[2],
+                                    DeviceCode = requestInfo.Parameters[3]
+                                };
+                                httpClient.BaseAddress = new Uri(ConfigurationManager.AppSettings["BaseUrl"]);
+                                var response = httpClient.PostAsync("/api/色rvices/app/PacketTask/AddPacketTask",
+                                    new StringContent("", Encoding.UTF8, "application/json")).Result;
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}:{addPacketTaskInput.PacketData} 上传成功。");
+                                }
+
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                        finally
+                        {
+                            session.Send($"areaCode：{requestInfo.Parameters[0]} detailAreaCode:{requestInfo.Parameters[1]} equipmentCode:{requestInfo.Parameters[2]} commandContent:{requestInfo.Parameters[3]}");
+                        }
+
                         break;
                 }
             };
 
             //Setup the appServer
-            if (!appServer.Setup(2012)) //Setup with listening port
+            if (!appServer.Setup(ConfigurationManager.AppSettings["SocketPort"].ToInt32OrDefault(2001))) //Setup with listening port
             {
                 Console.WriteLine("Failed to setup!");
                 Console.ReadKey();
