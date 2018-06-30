@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Freedom.ElectricityManager.SocketCenter.Models;
+using Newtonsoft.Json;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketBase.Protocol;
 
@@ -15,16 +16,18 @@ namespace Freedom.ElectricityManager.SocketCenter
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Press any key to start the server!");
+            //Console.WriteLine("Press any key to start the server!");
 
-            Console.ReadKey();
-            Console.WriteLine();
+            //Console.ReadKey();
+            //Console.WriteLine();
+
+            Console.Title = "武穴电力数据管理中心";
 
             var appServer = new AppServer(new DefaultReceiveFilterFactory<MyReceiveFilter, StringRequestInfo>());
 
             appServer.NewSessionConnected += session =>
             {
-                session.Send("Welcome to SuperSocket Telnet Server");
+                session.Send("Welcome to WuXue Electricity Manager Server！");
             };
 
             appServer.NewRequestReceived += (session, requestInfo) =>
@@ -53,7 +56,6 @@ namespace Freedom.ElectricityManager.SocketCenter
                     case "RECEVIE":
                         try
                         {
-
                             using (var httpClient = new HttpClient())
                             {
                                 var addPacketTaskInput = new AddPacketTaskInput
@@ -65,8 +67,8 @@ namespace Freedom.ElectricityManager.SocketCenter
                                     DeviceCode = requestInfo.Parameters[3]
                                 };
                                 httpClient.BaseAddress = new Uri(ConfigurationManager.AppSettings["BaseUrl"]);
-                                var response = httpClient.PostAsync("/api/色rvices/app/PacketTask/AddPacketTask",
-                                    new StringContent("", Encoding.UTF8, "application/json")).Result;
+                                var response = httpClient.PostAsync("/api/services/app/PacketTask/AddPacketTask",
+                                    new StringContent(JsonConvert.SerializeObject(addPacketTaskInput), Encoding.UTF8, "application/json")).Result;
                                 if (response.IsSuccessStatusCode)
                                 {
                                     Console.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}:{addPacketTaskInput.PacketData} 上传成功。");
@@ -90,7 +92,7 @@ namespace Freedom.ElectricityManager.SocketCenter
             //Setup the appServer
             if (!appServer.Setup(ConfigurationManager.AppSettings["SocketPort"].ToInt32OrDefault(2001))) //Setup with listening port
             {
-                Console.WriteLine("Failed to setup!");
+                Console.WriteLine("启动失败!");
                 Console.ReadKey();
                 return;
             }
@@ -100,12 +102,12 @@ namespace Freedom.ElectricityManager.SocketCenter
             //Try to start the appServer
             if (!appServer.Start())
             {
-                Console.WriteLine("Failed to start!");
+                Console.WriteLine("启动失败!");
                 Console.ReadKey();
                 return;
             }
 
-            Console.WriteLine("The server started successfully, press key 'q' to stop it!");
+            Console.WriteLine("服务启动成功，按“q”退出!");
 
             while (Console.ReadKey().KeyChar != 'q')
             {
@@ -116,7 +118,7 @@ namespace Freedom.ElectricityManager.SocketCenter
             //Stop the appServer
             appServer.Stop();
 
-            Console.WriteLine("The server was stopped!");
+            Console.WriteLine("服务已经停止!");
             Console.ReadKey();
         }
     }
